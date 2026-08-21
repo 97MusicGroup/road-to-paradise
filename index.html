@@ -209,8 +209,6 @@ const sfx={
 /* ================= LEVELS ================= */
 const LEVELS=[
   {name:'THE STUDIO', len:2000, waves:[{x:500,n:2},{x:1300,n:3}]},
-  {name:'THE STREET', len:2200, waves:[{x:500,n:3},{x:1500,n:3}]},
-  {name:'THE WOODS',  len:2200, waves:[{x:550,n:3},{x:1500,n:4}]},
   {name:'THE CLUB',   len:2400, waves:[{x:500,n:4},{x:1200,n:3},{x:1800,n:4}]},
   {name:'PARADISE',   len:2400, waves:[{x:500,n:4},{x:1300,n:5},{x:1900,n:1,boss:true}]},
 ];
@@ -593,7 +591,7 @@ function bgParadise(cam,t){
     PARA_GRAD.addColorStop(0,'#1a0406');PARA_GRAD.addColorStop(.55,'#5a0e10');PARA_GRAD.addColorStop(.85,'#a8241c');
   }
   ctx.fillStyle=PARA_GRAD;ctx.fillRect(0,0,W,FLOOR);
-  const prog=Math.min(1,cam/(LEVELS[4].len-W||1));
+  const prog=Math.min(1,cam/(LEVELS[LEVELS.length-1].len-W||1));
   drawCube(W/2-13*5,240-prog*140,10,1);
   ctx.fillStyle='#2a0808';ctx.fillRect(0,290,W,90);
   for(let i=0;i<20;i++){const y=296+i*4;
@@ -614,11 +612,11 @@ function bgParadise(cam,t){
   }
   floorStrip('#1c0a06','#5a1410');
 }
-const BGS=[bgStudio,bgStreet,bgWoods,bgClub,bgParadise];
+const BGS=[bgStudio,bgClub,bgParadise];
 function moodOverlay(){
-  const dim=[0.34,0.26,0.17,0.08,0][G.level];
+  const dim=[0.34,0.12,0][G.level];
   if(dim>0){ctx.fillStyle='rgba(2,2,14,'+dim+')';ctx.fillRect(0,0,W,H);}
-  const warm=[0,0.02,0.04,0.06,0.1][G.level];
+  const warm=[0,0.05,0.1][G.level];
   if(warm>0){ctx.fillStyle='rgba(255,120,50,'+warm+')';ctx.fillRect(0,0,W,H);}
 }
 
@@ -783,7 +781,11 @@ function drawTitle(t){
   bigText('PARADISE',235,60,RED);
   bigText('JAMES CARTER  X  MARTEN HØRGER',272,16,WHITE);
   if(Math.floor(t/500)%2===0)bigText('TAP TO START',340,20,WHITE);
-  bigText('AIH',408,14,DARKRED);
+  ctx.strokeStyle=GOLD;ctx.lineWidth=2;
+  ctx.strokeRect(JOIN_BTN.x,JOIN_BTN.y,JOIN_BTN.w,JOIN_BTN.h);
+  ctx.fillStyle='rgba(255,210,63,0.08)';ctx.fillRect(JOIN_BTN.x,JOIN_BTN.y,JOIN_BTN.w,JOIN_BTN.h);
+  bigText('JOIN THE MAILING LIST',JOIN_BTN.y+21,12,GOLD);
+  bigText('AIH',428,14,DARKRED);
 }
 function drawSelect(t){
   ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,H);
@@ -831,7 +833,7 @@ function rankFor(score){
   return 'PARADISE ROOKIE';
 }
 function drawWin(t){
-  bgParadise(LEVELS[4].len-W,t);
+  bgParadise(LEVELS[LEVELS.length-1].len-W,t);
   const bob1=Math.sin(t*0.006)*3,bob2=Math.sin(t*0.006+2)*3;
   ctx.save();ctx.translate(W/2-110,0);ctx.scale(1.7,1.7);ctx.drawImage(sprJ,-SW/2,(FLOOR-40)/1.7-SH+bob1);ctx.restore();
   ctx.save();ctx.translate(W/2+110,0);ctx.scale(-1.7,1.7);ctx.drawImage(sprM,-SW/2,(FLOOR-40)/1.7-SH+bob2);ctx.restore();
@@ -932,8 +934,8 @@ document.getElementById('shareCancel').addEventListener('click',hideShareBox);
       https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.123456789=test@test.com
    3. Paste FORM_ID and the entry.XXXXXXXXX number below. That's it,
       every submission lands as a new row in the linked Sheet. */
-const GOOGLE_FORM_ID = ""; // e.g. "1FAIpQLSf..."
-const GOOGLE_FORM_EMAIL_ENTRY = ""; // e.g. "entry.123456789"
+const GOOGLE_FORM_ID = "1FAIpQLSer-tbjqT1LP_x3u0lC7Sgyx2xgdVzyeLikatIN8a1YeFfIUg";
+const GOOGLE_FORM_EMAIL_ENTRY = "entry.963659290";
 function submitEmail(email){
   if(!GOOGLE_FORM_ID||!GOOGLE_FORM_EMAIL_ENTRY){
     console.warn('Email capture not wired up yet — see comment above submitEmail().');
@@ -946,7 +948,7 @@ function submitEmail(email){
 const emailBox=document.getElementById('emailBox');
 const emailInput=document.getElementById('emailInput');
 const emailMsg=document.getElementById('emailMsg');
-function showEmailBox(){emailBox.classList.add('show');emailInput.focus();}
+function showEmailBox(){emailBox.classList.add('show');emailInput.value='';emailMsg.textContent='';emailInput.focus();}
 function hideEmailBox(){emailBox.classList.remove('show');}
 document.getElementById('emailSubmit').addEventListener('click',()=>{
   const v=emailInput.value.trim();
@@ -958,9 +960,11 @@ document.getElementById('emailSubmit').addEventListener('click',()=>{
 document.getElementById('emailSkip').addEventListener('click',hideEmailBox);
 
 /* ================= MAIN LOOP ================= */
-let last=0;
+let last=0,prevScene='title';
 function frame(ts){
   const dt=Math.min(40,ts-last);last=ts;G.t+=dt;
+  if(prevScene!=='play'&&G.scene==='play')stopHook();
+  prevScene=G.scene;
   ctx.save();
   if(G.shake>0){G.shake-=dt*0.03;ctx.translate((Math.random()-0.5)*G.shake,(Math.random()-0.5)*G.shake);}
   ctx.fillStyle=BLACK;ctx.fillRect(-20,-20,W+40,H+40);
@@ -1030,7 +1034,7 @@ document.addEventListener('keydown',e=>{
   if(c==='KeyX'||c==='KeyK'){press('kick',true);e.preventDefault();}
   if(c==='KeyC'||c==='KeyL'||c==='KeyS'||c==='Space'){press('special',true);e.preventDefault();}
   if(c==='KeyE'){press('dance',true);e.preventDefault();}
-  if(c==='Enter')advance(W/2);
+  if(c==='Enter')advance(W/2,H/2);
 });
 document.addEventListener('keyup',e=>{
   const c=e.code;
@@ -1040,14 +1044,22 @@ document.addEventListener('keyup',e=>{
 });
 function canvasPos(e){
   const r=cv.getBoundingClientRect();
-  return (e.clientX-r.left)/r.width*W;
+  return {x:(e.clientX-r.left)/r.width*W, y:(e.clientY-r.top)/r.height*H};
 }
-function advance(x){
+const JOIN_BTN={x:W/2-105,y:362,w:210,h:32};
+function advance(x,y){
   ac();
   if('ontouchstart' in window&&!document.fullscreenElement){
     try{document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{});}catch(e){}
   }
-  if(G.scene==='title'){G.scene='select';G.t=0;G.pickedOnce=false;sfx.select();showCtl(false);return;}
+  if(G.scene==='title'){
+    if(y!==undefined&&x>=JOIN_BTN.x&&x<=JOIN_BTN.x+JOIN_BTN.w&&y>=JOIN_BTN.y&&y<=JOIN_BTN.y+JOIN_BTN.h){
+      showEmailBox();return;
+    }
+    G.scene='select';G.t=0;G.pickedOnce=false;sfx.select();showCtl(false);
+    playHook(true); // hook loops through select + first level intro, stops when play begins
+    return;
+  }
   if(G.scene==='select'){
     const pick=x<W/2?0:1;
     if(G.selCursor===pick&&G.pickedOnce){G.playerChar=pick;showCtl(true);startGame();}
@@ -1059,7 +1071,7 @@ function advance(x){
     if(!emailBox.classList.contains('show')&&!shareBox.classList.contains('show'))showShareBox();
   }
 }
-cv.addEventListener('pointerdown',e=>{advance(canvasPos(e));});
+cv.addEventListener('pointerdown',e=>{const p=canvasPos(e);advance(p.x,p.y);});
 
 function fit(){
   const s=Math.min(innerWidth/W,innerHeight/H);
