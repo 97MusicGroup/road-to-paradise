@@ -16,9 +16,9 @@
   body{font-family:'Courier New',monospace;font-weight:bold;color:var(--white);}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
   canvas{image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%;max-height:100%;touch-action:none;}
-  .ctl{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));z-index:6;display:flex;gap:8px;opacity:0.85;}
-  #ctlL{left:max(10px,env(safe-area-inset-left));} #ctlR{right:max(10px,env(safe-area-inset-right));}
-  .tbtn{width:56px;height:56px;border:3px solid var(--red);background:rgba(255,30,30,.12);
+  .ctl{position:fixed;bottom:max(8px,env(safe-area-inset-bottom));z-index:6;display:flex;gap:7px;opacity:0.62;}
+  #ctlL{left:max(8px,env(safe-area-inset-left));} #ctlR{right:max(8px,env(safe-area-inset-right));}
+  .tbtn{width:50px;height:50px;border:2px solid var(--red);background:rgba(10,10,10,.55);
     color:var(--red);font-family:inherit;font-weight:bold;font-size:16px;touch-action:none;
     display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:3px 3px 0 #000;line-height:1;}
   .tbtn small{font-size:7px;margin-top:2px;letter-spacing:0.5px;}
@@ -100,7 +100,7 @@
 (function(){
 "use strict";
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-const H=450,FLOOR=380,PX=5;
+const H=450,FLOOR=300,PX=5;
 const ASPECT=(Math.max(screen.width,screen.height)/Math.min(screen.width,screen.height))||(16/9);
 const W=Math.max(800,Math.min(1100,Math.round(H*ASPECT)));
 cv.width=W;cv.height=H;
