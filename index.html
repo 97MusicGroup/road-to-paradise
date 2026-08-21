@@ -37,7 +37,8 @@
     flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center;}
   #emailBox.show{display:flex;}
   #emailBox input{font-family:inherit;font-size:16px;padding:12px 14px;width:min(320px,80vw);
-    border:3px solid var(--red);background:#000;color:var(--white);text-align:center;}
+    border:3px solid var(--red);background:#000;color:var(--white);text-align:center;
+    user-select:text;-webkit-user-select:text;touch-action:manipulation;}
   #emailBox .row{display:flex;gap:10px;}
   #emailBox button{font-family:inherit;font-weight:bold;padding:11px 20px;border:3px solid var(--white);
     background:var(--red);color:#000;box-shadow:3px 3px 0 #000;}
@@ -941,9 +942,23 @@ function submitEmail(email){
     console.warn('Email capture not wired up yet — see comment above submitEmail().');
     return Promise.resolve(false);
   }
-  const url='https://docs.google.com/forms/d/e/'+GOOGLE_FORM_ID+'/formResponse';
-  const body=new URLSearchParams();body.set(GOOGLE_FORM_EMAIL_ENTRY,email);
-  return fetch(url,{method:'POST',mode:'no-cors',body}).then(()=>true).catch(()=>false);
+  return new Promise(resolve=>{
+    let iframe=document.getElementById('hidden_iframe');
+    if(!iframe){
+      iframe=document.createElement('iframe');
+      iframe.name='hidden_iframe';iframe.id='hidden_iframe';iframe.style.display='none';
+      document.body.appendChild(iframe);
+    }
+    const form=document.createElement('form');
+    form.action='https://docs.google.com/forms/d/e/'+GOOGLE_FORM_ID+'/formResponse';
+    form.method='POST';form.target='hidden_iframe';
+    const inp=document.createElement('input');
+    inp.type='hidden';inp.name=GOOGLE_FORM_EMAIL_ENTRY;inp.value=email;
+    form.appendChild(inp);
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(()=>{form.remove();resolve(true);},500);
+  });
 }
 const emailBox=document.getElementById('emailBox');
 const emailInput=document.getElementById('emailInput');
@@ -1015,15 +1030,19 @@ document.querySelectorAll('.tbtn').forEach(b=>{
   b.addEventListener('pointercancel',()=>press(k,false));
   b.addEventListener('lostpointercapture',()=>press(k,false));
 });
-document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
-document.addEventListener('dblclick',e=>e.preventDefault());
+function inModal(e){return !!(e.target.closest && e.target.closest('#emailBox, #shareBox'));}
+document.addEventListener('touchmove',e=>{if(!inModal(e))e.preventDefault();},{passive:false});
+document.addEventListener('dblclick',e=>{if(!inModal(e))e.preventDefault();});
 let lastTouch=0;
 document.addEventListener('touchend',e=>{
+  if(inModal(e))return;
   const now=Date.now();
   if(now-lastTouch<350)e.preventDefault();
   lastTouch=now;
 },{passive:false});
 document.addEventListener('keydown',e=>{
+  const tag=(e.target&&e.target.tagName)||'';
+  if(tag==='INPUT'||tag==='TEXTAREA')return; // let the email field type normally
   if(e.repeat)return;
   const c=e.code;
   if(c==='ArrowLeft'||c==='KeyA'){keys.left=true;e.preventDefault();}
